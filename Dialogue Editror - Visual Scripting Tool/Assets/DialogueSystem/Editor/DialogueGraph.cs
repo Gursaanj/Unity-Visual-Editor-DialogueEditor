@@ -1,18 +1,57 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-public class DialogueGraph : MonoBehaviour
+using UnityEngine.UIElements;
+using UnityEditor.UIElements;
+using UnityEditor;
+public class DialogueGraph : EditorWindow
 {
-    // Start is called before the first frame update
-    void Start()
+    private DialogueGraphView _graphView;
+
+
+    [MenuItem("Dialogue Editor/Dialogue Graph Editor")]
+    public static void OpenDialogueEditorWindow()
     {
-        
+        DialogueGraph window = GetWindow<DialogueGraph>();
+        window.titleContent = new GUIContent("Dialogue Graph Editor");
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnEnable()
     {
-        
+        ConstructGraphView();
+        GenerateToolbar();
+    }
+
+    private void ConstructGraphView()
+    {
+        _graphView = new DialogueGraphView
+        {
+            name = "Dialogue Graph"
+        };
+
+        _graphView.StretchToParentSize();
+        rootVisualElement.Add(_graphView);
+    }
+
+    private void GenerateToolbar()
+    {
+        Toolbar toolbar = new Toolbar();
+
+        ToolbarButton nodeCreationButton = new ToolbarButton(delegate
+        {
+            _graphView.CreateNode("Dialogue Node");
+        });
+
+        nodeCreationButton.tooltip = "Create a new Dialogue Node";
+
+        nodeCreationButton.text = "Create Node";
+        toolbar.Add(nodeCreationButton);
+
+        rootVisualElement.Add(toolbar);
+    }
+
+    private void OnDisable()
+    {
+        rootVisualElement.Remove(_graphView);
     }
 }
