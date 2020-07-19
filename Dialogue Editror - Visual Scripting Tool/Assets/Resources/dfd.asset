@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdeb32954a2676c46a2814ae05124227, type: 3}
+  m_Name: dfd
+  m_EditorClassIdentifier: 
+  DialogueNodeData:
+  - Guid: 82f939e4-f1d6-4bcd-b223-2b630f21a565
+    DialogueText: Dialogue Node
+    Position: {x: 190, y: 427}
+  - Guid: ebfc203e-b79f-4026-9d24-22be27730a71
+    DialogueText: Dialogue Node
+    Position: {x: 446, y: 173}
+  - Guid: 9a756f31-88fd-4772-abe4-3099bfa4db5a
+    DialogueText: Dialogue Node
+    Position: {x: -3, y: 73}
+  NodeLinkData:
+  - BaseNodeGuid: eb768ee9-a4c6-41f4-98bb-836b5eee37ab
+    PortName: Begin
+    TargetNodeGuid: 82f939e4-f1d6-4bcd-b223-2b630f21a565
+  - BaseNodeGuid: 82f939e4-f1d6-4bcd-b223-2b630f21a565
+    PortName: Choice 0
+    TargetNodeGuid: ebfc203e-b79f-4026-9d24-22be27730a71
+  - BaseNodeGuid: 82f939e4-f1d6-4bcd-b223-2b630f21a565
+    PortName: Choice 1
+    TargetNodeGuid: ebfc203e-b79f-4026-9d24-22be27730a71

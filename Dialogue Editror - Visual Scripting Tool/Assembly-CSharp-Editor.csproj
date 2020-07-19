@@ -65,7 +65,9 @@
     <Compile Include="Assets\DialogueSystem\Editor\DialogueGraph.cs" />
     <Compile Include="Assets\DialogueSystem\Editor\DialogueGraphView.cs" />
     <Compile Include="Assets\DialogueSystem\Editor\DialogueNode.cs" />
+    <Compile Include="Assets\DialogueSystem\Editor\GraphSaveUtility.cs" />
     <None Include="Assets\DialogueSystem\Editor\Resources\DialogueGraph.uss" />
+    <None Include="Assets\DialogueSystem\Editor\Resources\Node.uss" />
     <Reference Include="UnityEditor.TestRunner">
       <HintPath>C:/Users/Gursaanj/Documents/GitHub/Unity-Visual-Editor-DialogueEditor/Dialogue Editror - Visual Scripting Tool/Library/ScriptAssemblies/UnityEditor.TestRunner.dll</HintPath>
     </Reference>
@@ -648,6 +650,12 @@
     <Reference Include="Boo.Lang">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.3.0f6/Editor/Data/MonoBleedingEdge/lib/mono/unityscript/Boo.Lang.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Assembly-CSharp.csproj">
+      <Project>{9FE058FA-C1CB-9054-1BF4-86DE6A20CF68}</Project>
+      <Name>Assembly-CSharp</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />
