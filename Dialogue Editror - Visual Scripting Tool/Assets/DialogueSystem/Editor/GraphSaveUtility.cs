@@ -100,11 +100,16 @@ public class GraphSaveUtility
             EditorUtility.DisplayDialog("File cannot be loaded", "File does not seem to exist in the appropriate folder!", "Dammit");
             return;
         }
-
-        // Steps to Load Graph
-        ClearGraph();
-        GenerateNodes();
-        ConnectNodes();
+        
+        if (EditorUtility.DisplayDialog("Delete all current changes?", 
+            string.Format("Are you sure you would like to delete all possible changes done to this graph before loading: {0}", fileName),
+            "Yup", "Not yet"))
+        {
+            // Steps to Load Graph
+            ClearGraph();
+            GenerateNodes();
+            ConnectNodes();
+        }
     }
 
     /// <summary>
@@ -117,7 +122,7 @@ public class GraphSaveUtility
             return;
         }
 
-        //Set  entry points guid back from the saved graph. Discars existing Guid
+        //Set  entry points guid back from the saved graph. Discards existing Guid
         _nodes.Find(dialogueNode => dialogueNode.EntryPoint).GUID = _containerCache.NodeLinkData[0].BaseNodeGuid;
 
         foreach (DialogueNode node in _nodes)
@@ -175,14 +180,14 @@ public class GraphSaveUtility
     /// </summary>
     private void ConnectNodes()
     {
-        for (var i = 0; i < _nodes.Count; i++)
+        for (int i = 0; i < _nodes.Count; i++)
         {
-            var k = i; //Prevent access to modified closure
+            int k = i; //Prevent access to modified closure
             var connections = _containerCache.NodeLinkData.Where(x => x.BaseNodeGuid == _nodes[k].GUID).ToList();
-            for (var j = 0; j < connections.Count(); j++)
+            for (int j = 0; j < connections.Count(); j++)
             {
-                var targetNodeGUID = connections[j].TargetNodeGuid;
-                var targetNode = _nodes.First(x => x.GUID == targetNodeGUID);
+                string targetNodeGUID = connections[j].TargetNodeGuid;
+                DialogueNode targetNode = _nodes.First(x => x.GUID == targetNodeGUID);
                 LinkNodes(_nodes[i].outputContainer[j].Q<Port>(), (Port)targetNode.inputContainer[0]);
 
                 targetNode.SetPosition(new Rect(
