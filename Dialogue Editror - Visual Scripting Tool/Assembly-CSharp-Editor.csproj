@@ -62,6 +62,7 @@
      <Compile Include="Assets\DialogueSystem\Editor\DialogueGraphView.cs" />
      <Compile Include="Assets\DialogueSystem\Editor\DialogueNode.cs" />
      <Compile Include="Assets\DialogueSystem\Editor\GraphSaveUtility.cs" />
+     <Compile Include="Assets\DialogueSystem\Editor\NodeSearchWindow.cs" />
      <None Include="Assets\DialogueSystem\Editor\Resources\DialogueGraph.uss" />
      <None Include="Assets\DialogueSystem\Editor\Resources\Node.uss" />
  <Reference Include="UnityEditor.TestRunner">

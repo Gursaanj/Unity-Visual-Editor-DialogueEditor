@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using UnityEditor;
@@ -21,16 +22,12 @@ public class DialogueGraph : EditorWindow
         ConstructGraphView();
         GenerateToolbar();
         GenerateMiniMap();
+        GenerateBlackBoard();
     }
-
-    private void OnGUI()
-    {
-        //Redo Minimap if needed
-    }
-
+    
     private void ConstructGraphView()
     {
-        _graphView = new DialogueGraphView
+        _graphView = new DialogueGraphView(this)
         {
             name = "Dialogue Graph"
         };
@@ -48,9 +45,51 @@ public class DialogueGraph : EditorWindow
         {
             anchored = true
         };
+        
+        //Set Minimap to Corner right with an offset of 10 px
+        Vector2 coords = _graphView.contentViewContainer.WorldToLocal(new Vector2(maxSize.x - 10, 30));
 
-        minimap.SetPosition(new Rect(position.x, 30, 200, 140));
+        minimap.SetPosition(new Rect(coords.x, coords.y, 200, 140));
         _graphView.Add(minimap);
+    }
+
+    private void GenerateBlackBoard()
+    {
+        Blackboard blackboard = new Blackboard(_graphView)
+        {
+            //Event Called when + button is pressed
+            addItemRequested = delegate(Blackboard _blackboard)
+            {
+                _graphView.AddPropertyToBlackBoard(new ExposedProperty());
+            },
+            
+            //Event called when property is edited
+            editTextRequested = delegate(Blackboard blackboard1, VisualElement element, string newValue)
+            {
+                string oldPropertyName = ((BlackboardField) element).text; // PropertyName
+                
+                // if Property name exists display error dialogue
+                if (_graphView.ExposedProperties.Any(x => x.PropertyName == newValue))
+                {
+                    EditorUtility.DisplayDialog("Error",
+                        "This Property name already exists, please choose another one!", "Sounds Good");
+                    return;
+                }
+
+                int propertyIndex = _graphView.ExposedProperties.FindIndex(x => x.PropertyName == oldPropertyName);
+                _graphView.ExposedProperties[propertyIndex].PropertyName = newValue;
+                ((BlackboardField) element).text = newValue;
+            }
+        };
+        
+        blackboard.Add(new BlackboardSection
+        {
+            title = "Exposed Properties",
+        });
+        
+        blackboard.SetPosition(new Rect(10,30,200,300));
+        _graphView.Add(blackboard);
+        _graphView.Blackboard = blackboard;
     }
 
     /// <summary>
@@ -91,19 +130,14 @@ public class DialogueGraph : EditorWindow
         toolbar.Add(fileName);
 
         //Button for NodecCreation
-        ToolbarButton nodeCreationButton = new ToolbarButton(delegate
-        {
-            _graphView.CreateNode("Dialogue Node");
-        });
-
-        nodeCreationButton.tooltip = "Create a new Dialogue Node";
-        nodeCreationButton.text = "Create Node";
-        toolbar.Add(nodeCreationButton);
-
-        //toolbar.Add(CreateToolbarButton(delegate
-        //{
-        //    _graphView.CreateNode("Dialogue Node");
-        //}, "Create a new Dialogue Node", "Create Node"));
+        // ToolbarButton nodeCreationButton = new ToolbarButton(delegate
+        // {
+        //     _graphView.CreateNode("Dialogue Node");
+        // });
+        //
+        // nodeCreationButton.tooltip = "Create a new Dialogue Node";
+        // nodeCreationButton.text = "Create Node";
+        // toolbar.Add(nodeCreationButton);
 
         //Button for Saving The Graph
         ToolbarButton saveGraphButton = new ToolbarButton(delegate

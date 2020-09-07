@@ -31,13 +31,107 @@ public class GraphSaveUtility
     /// <param name="fileName"></param>
     public void SaveGraph(string fileName)
     {
-        if (_edges == null || _edges.Count == 0 || _nodes == null || _nodes.Count == 0)
+        // if (_edges == null || _edges.Count == 0 || _nodes == null || _nodes.Count == 0)
+        // {
+        //     return;
+        // }
+        //
+        // DialogueContainer container = ScriptableObject.CreateInstance<DialogueContainer>();
+        //
+        // /// Save alll Connections
+        // foreach (Edge edge in _edges)
+        // {
+        //     if (edge != null && edge.input.node != null)
+        //     {
+        //         DialogueNode outputNode = edge.output.node as DialogueNode;
+        //         DialogueNode inputNode = edge.input.node as DialogueNode;
+        //
+        //         container.NodeLinkData.Add(new NodeLinkData
+        //         {
+        //             BaseNodeGuid = outputNode.GUID,
+        //             PortName = edge.output.portName,
+        //             TargetNodeGuid = inputNode.GUID
+        //         });
+        //     }
+        // }
+        //
+        // /// Save all Nodes
+        // foreach (DialogueNode node in _nodes)
+        // {
+        //     if (!node.EntryPoint)
+        //     {
+        //         container.DialogueNodeData.Add(new DialogueNodeData
+        //         {
+        //             Guid = node.GUID,
+        //             DialogueText = node.DialogueText,
+        //             Position = node.GetPosition().position
+        //         });
+        //     }
+        // }
+
+        // If folder does not exist, then create it
+        
+        DialogueContainer container = ScriptableObject.CreateInstance<DialogueContainer>();
+
+        if (!SaveNodes(container))
         {
             return;
         }
+        
+        SaveExposedProperties(container);
 
-        DialogueContainer container = ScriptableObject.CreateInstance<DialogueContainer>();
+        if (!AssetDatabase.IsValidFolder(_graphViewFolderPath))
+        {
+            int lastFolderIndex = _graphViewFolderPath.LastIndexOf('/');
+            if (lastFolderIndex != -1)
+            {
+                AssetDatabase.CreateFolder(_graphViewFolderPath.Substring(0, lastFolderIndex), _graphViewFolderPath.Substring(lastFolderIndex + 1));
+            }
+            else
+            {
+                Debug.LogError("Unable to locate/create appropriate folder for saving");
+                return;
+            }
+        }
 
+        AssetDatabase.CreateAsset(container, string.Format("{0}/{1}.asset", _graphViewFolderPath, fileName));
+    }
+    
+
+    /// <summary>
+    /// Loads the Graph
+    /// </summary>
+    /// <param name="fileName"></param>
+    public void LoadGraph(string fileName)
+    {
+        _containerCache = Resources.Load<DialogueContainer>(fileName);
+        
+        if (_containerCache == null)
+        {
+            EditorUtility.DisplayDialog("File cannot be loaded", "File does not seem to exist in the appropriate folder!", "Dammit");
+            return;
+        }
+        
+        if (EditorUtility.DisplayDialog("Delete all current changes?", 
+            string.Format("Are you sure you would like to delete all possible changes done to this graph before loading: {0}", fileName),
+            "Yup", "Not yet"))
+        {
+            // Steps to Load Graph
+            ClearGraph();
+            GenerateNodes();
+            ConnectNodes();
+            CreateExposedProperties();
+        }
+    }
+    
+
+    private bool SaveNodes(DialogueContainer container)
+    {
+        if (_edges == null || _edges.Count == 0 || _nodes == null || _nodes.Count == 0)
+        {
+            return false;
+        }
+        
         /// Save alll Connections
         foreach (Edge edge in _edges)
         {
@@ -69,47 +163,12 @@ public class GraphSaveUtility
             }
         }
 
-        // If folder does not exist, then create it
-        if (!AssetDatabase.IsValidFolder(_graphViewFolderPath))
-        {
-            int lastFolderIndex = _graphViewFolderPath.LastIndexOf('/');
-            if (lastFolderIndex != -1)
-            {
-                AssetDatabase.CreateFolder(_graphViewFolderPath.Substring(0, lastFolderIndex), _graphViewFolderPath.Substring(lastFolderIndex + 1));
-            }
-            else
-            {
-                Debug.LogError("Unable to locate/create appropriate folder for saving");
-                return;
-            }
-        }
-
-        AssetDatabase.CreateAsset(container, string.Format("{0}/{1}.asset", _graphViewFolderPath, fileName));
+        return true;
     }
 
-    /// <summary>
-    /// Loads the Graph
-    /// </summary>
-    /// <param name="fileName"></param>
-    public void LoadGraph(string fileName)
+    private void SaveExposedProperties(DialogueContainer container)
     {
-        _containerCache = Resources.Load<DialogueContainer>(fileName);
-
-        if (_containerCache == null)
-        {
-            EditorUtility.DisplayDialog("File cannot be loaded", "File does not seem to exist in the appropriate folder!", "Dammit");
-            return;
-        }
-        
-        if (EditorUtility.DisplayDialog("Delete all current changes?", 
-            string.Format("Are you sure you would like to delete all possible changes done to this graph before loading: {0}", fileName),
-            "Yup", "Not yet"))
-        {
-            // Steps to Load Graph
-            ClearGraph();
-            GenerateNodes();
-            ConnectNodes();
-        }
+        container.ExposedProperties.AddRange(_targetGraphView.ExposedProperties);
     }
 
     /// <summary>
@@ -160,7 +219,7 @@ public class GraphSaveUtility
         //Create each saved DialogueNode
         foreach (DialogueNodeData nodeDataElement in _containerCache.DialogueNodeData)
         {
-            DialogueNode tempNode = _targetGraphView.CreateDialogueNode(nodeDataElement.DialogueText);
+            DialogueNode tempNode = _targetGraphView.CreateDialogueNode(nodeDataElement.DialogueText, Vector2.zero);
             tempNode.GUID = nodeDataElement.Guid;
             _targetGraphView.AddElement(tempNode);
 
@@ -209,5 +268,18 @@ public class GraphSaveUtility
         tempEdge?.input.Connect(tempEdge);
         tempEdge?.output.Connect(tempEdge);
         _targetGraphView.AddElement(tempEdge);
-    } 
+    }
+    
+    private void CreateExposedProperties()
+    {
+        //Clear existing properties from current blackboard
+        _targetGraphView.ClearBlackBoard();
+        
+        //Add current properties from containerCache
+        foreach (var exposedProperty in _containerCache.ExposedProperties)
+        {
+            _targetGraphView.AddPropertyToBlackBoard(exposedProperty);
+        }
+        
+    }
 }

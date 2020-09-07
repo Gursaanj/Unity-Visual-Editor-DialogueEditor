@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.Experimental.GraphView;
@@ -8,15 +9,18 @@ using UnityEditor.Experimental.GraphView;
 public class DialogueGraphView : GraphView
 {
     public readonly Vector2 DefaultNodeSize = new Vector2(150, 200);
-    private const int _maxCharactersforTitle = 40;
-
+    private const int MaxCharactersforTitle = 40;
+    
+    public List<ExposedProperty> ExposedProperties = new List<ExposedProperty>();
+    public Blackboard Blackboard;
+    private NodeSearchWindow _searchWindow;
 
     /// <summary>
     /// Manipulators are the base class for interactions with Visual Elements (in this case, a graphview and Nodes)
     /// They can handle intercation based callbacks (built in ones like On Drag/Drop, MouseClicks and so on)
     /// </summary>
 
-    public DialogueGraphView()
+    public DialogueGraphView(EditorWindow window)
     {
         //Allow for Zooming capabilites
         SetupZoom(ContentZoomer.DefaultMinScale, ContentZoomer.DefaultMaxScale);
@@ -36,11 +40,24 @@ public class DialogueGraphView : GraphView
 
         //Add Starting Node
         AddElement(GenerateEntryPointNode());
+        //Add Search Window
+        AddSearchWindow(window);
     }
-
-    public void CreateNode(string nodeName)
+    
+    public void CreateNode(string nodeName, Vector2 position)
     {
-        AddElement(CreateDialogueNode(nodeName));
+        AddElement(CreateDialogueNode(nodeName, position));
+    }
+    
+    private void AddSearchWindow(EditorWindow window)
+    {
+        _searchWindow = ScriptableObject.CreateInstance<NodeSearchWindow>();
+        _searchWindow.Init(window,this);
+        nodeCreationRequest = delegate(NodeCreationContext context)
+        {
+            SearchWindow.Open(new SearchWindowContext(context.screenMousePosition), _searchWindow);
+        };
+            
     }
 
     /// <summary>
@@ -63,7 +80,7 @@ public class DialogueGraphView : GraphView
         return compatiblePorts;
     }
 
-    public DialogueNode CreateDialogueNode(string nodeName)
+    public DialogueNode CreateDialogueNode(string nodeName, Vector2 position)
     {
         DialogueNode node = new DialogueNode
         {
@@ -93,7 +110,7 @@ public class DialogueGraphView : GraphView
         dialogueField.RegisterValueChangedCallback(evt =>
         {
             node.DialogueText = evt.newValue;
-            node.title = evt.newValue.ToCharArray().Length > _maxCharactersforTitle ? evt.newValue.Substring(0, _maxCharactersforTitle) : evt.newValue;
+            node.title = evt.newValue.ToCharArray().Length > MaxCharactersforTitle ? evt.newValue.Substring(0, MaxCharactersforTitle) : evt.newValue;
         });
 
         dialogueField.multiline = true;
@@ -102,7 +119,7 @@ public class DialogueGraphView : GraphView
 
         node.RefreshExpandedState();
         node.RefreshPorts();
-        node.SetPosition(new Rect(Vector2.zero, DefaultNodeSize));
+        node.SetPosition(new Rect(position, DefaultNodeSize));
 
         return node;
     }
@@ -210,5 +227,57 @@ public class DialogueGraphView : GraphView
         node.RefreshExpandedState();
     }
 
+    public void ClearBlackBoard()
+    {
+        ExposedProperties.Clear();
+        Blackboard.Clear();
+    }
 
+    public void AddPropertyToBlackBoard(ExposedProperty exposedProperty)
+    {
+        int duplicateNameIndex = 1;
+        string localPropertyName = exposedProperty.PropertyName;
+        string localPropertyValue = exposedProperty.PropertyValue;
+
+        while (ExposedProperties.Any(x => x.PropertyName == localPropertyName))
+        {
+            localPropertyName = $"{localPropertyName}{duplicateNameIndex}"; // Name || Name1 || Name12
+            duplicateNameIndex++;
+        }
+        
+        ExposedProperty property = new ExposedProperty();
+        property.PropertyName = localPropertyName;
+        property.PropertyValue = localPropertyValue;
+        ExposedProperties.Add(property);
+        
+        VisualElement container = new VisualElement();
+        BlackboardField field = new BlackboardField
+        {
+            text = property.PropertyName,
+            typeText = "string",
+        };
+        
+        container.Add(field);
+
+        TextField propertyValueTextField = new TextField("Value : ")
+        {
+            value = localPropertyValue
+        };
+
+
+        propertyValueTextField.RegisterValueChangedCallback(delegate(ChangeEvent<string> evt)
+        {
+            int changingPropertyIndex = ExposedProperties.FindIndex(x => x.PropertyName == property.PropertyName);
+            ExposedProperties[changingPropertyIndex].PropertyValue = evt.newValue;
+        });
+
+        BlackboardRow blackboardRow = new BlackboardRow(field, propertyValueTextField);
+        container.Add(blackboardRow);
+
+
+        if (Blackboard != null)
+        {
+            Blackboard.Add(container);
+        }
+    }
 }

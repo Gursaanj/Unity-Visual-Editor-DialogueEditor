@@ -60,6 +60,7 @@
   <ItemGroup>
      <Compile Include="Assets\DialogueSystem\Runtime\DialogueContainer.cs" />
      <Compile Include="Assets\DialogueSystem\Runtime\DialogueNodeData.cs" />
+     <Compile Include="Assets\DialogueSystem\Runtime\ExposedProperty.cs" />
      <Compile Include="Assets\DialogueSystem\Runtime\NodeLinkData.cs" />
  <Reference Include="Unity.Timeline.Editor">
  <HintPath>C:/Users/Gursaanj/Documents/GitHub/Unity-Visual-Editor-DialogueEditor/Dialogue Editror - Visual Scripting Tool/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
