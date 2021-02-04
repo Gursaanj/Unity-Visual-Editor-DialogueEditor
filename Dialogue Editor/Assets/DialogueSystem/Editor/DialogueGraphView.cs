@@ -261,10 +261,11 @@ public class DialogueGraphView : GraphView
 
         TextField propertyValueTextField = new TextField("Value : ")
         {
-            value = localPropertyValue
+            value = localPropertyValue,
+            style = {width = new Length(80, LengthUnit.Percent)}
         };
-
-
+        
+        
         propertyValueTextField.RegisterValueChangedCallback(delegate(ChangeEvent<string> evt)
         {
             int changingPropertyIndex = ExposedProperties.FindIndex(x => x.PropertyName == property.PropertyName);
